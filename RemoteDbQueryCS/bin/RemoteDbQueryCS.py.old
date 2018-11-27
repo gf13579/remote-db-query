@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+import sys, time, json, shlex
+
+from splunklib.searchcommands import Configuration
+from splunklib.searchcommands import dispatch
+from splunklib.searchcommands import GeneratingCommand
+from splunklib.searchcommands import Option
+from splunklib.searchcommands import validators
+import splunklib.results as results
+
+@Configuration()
+class RemoteDbQueryCSCommand(GeneratingCommand):
+    connection = Option(require=True)
+    query = Option(require=True)
+
+    def generate(self):
+        collection = self.service.kvstore["scheduled_queries"]
+
+        newkey = collection.data.insert(json.dumps({"TimeCreated":time.time(),"Connection":self.connection,"Status":"Scheduled","Query":self.query,"Results":""}))
+
+        dump = json.dumps(collection.data.query(), indent=1)
+
+        # wait
+        time.sleep(5)
+
+        # do a search, get the results, yield them
+
+        ################# FAKE IT ###########3
+        newkey = "5bb5134043d3a38bb47c6082"
+
+        #searchquery_normal = "search index="+self.index + " scheduled_query_key=" + newkey
+        searchquery_normal = "search index="+self.index + " NetBiosName=*"
+        kwargs_normalsearch = {"exec_mode": "normal"}
+        job = self.service.jobs.create(searchquery_normal, **kwargs_normalsearch)
+
+        # A normal search returns the job's SID right away, so we need to poll for completion
+        while True:
+            while not job.is_ready():
+                pass
+            stats = {"isDone": job["isDone"],
+                     "doneProgress": float(job["doneProgress"])*100,
+                      "scanCount": int(job["scanCount"]),
+                      "eventCount": int(job["eventCount"]),
+                      "resultCount": int(job["resultCount"])}
+
+            status = ("\r%(doneProgress)03.1f%%   %(scanCount)d scanned   "
+                      "%(eventCount)d matched   %(resultCount)d results") % stats
+
+            #sys.stdout.write(status)
+            #sys.stdout.flush()
+            if stats["isDone"] == "1":
+                #sys.stdout.write("\n\nDone!\n\n")
+                break
+            time.sleep(2)
+
+        # Get the results and display them
+        for result in results.ResultsReader(job.results()):
+            if isinstance(result, results.Message):
+                # Diagnostic messages may be returned in the results
+                #print '%s: %s' % (result.type, result.message)
+                print ""
+            elif isinstance(result, dict):
+                # next line is hacky - will affect values if they contain spaces and commas
+                str = result["_raw"].replace(", ",",")
+                str = "_time=" + str
+                lexer = shlex.shlex(str, posix=True)
+                lexer.whitespace_split = True
+                lexer.whitespace = ','
+                props = dict(pair.split('=', 1) for pair in lexer)
+
+                #yield {"_raw":result["_raw"]}
+                yield props
+
+        job.cancel()
+
+        #yield {'_time': time.time(), 'result': 'success', '_raw': newkey }
+
+        time.sleep(1)
+
+dispatch(RemoteDbQueryCSCommand, sys.argv, sys.stdin, sys.stdout, __name__)

@@ -1,0 +1,18 @@
+[indexes/remotedb]
+owner = admin
+version = 7.1.1
+modtime = 1538596323.876773000
+
+[views/remote_database_query]
+owner = admin
+version = 7.1.1
+modtime = 1538673515.818405000
+
+[passwords/credential%3A%3Aadmin%3A]
+owner = admin
+version = 7.2.0
+modtime = 1543216025.431745000
+
+[app/install/is_configured]
+version = 7.2.0
+modtime = 1543216025.455352000

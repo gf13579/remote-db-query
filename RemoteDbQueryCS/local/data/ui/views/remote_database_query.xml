@@ -1,0 +1,41 @@
+<form>
+  <label>Remote Database Query</label>
+  <fieldset submitButton="false">
+    <input type="text" token="indexField">
+      <label>Index</label>
+    </input>
+    <input type="text" token="connectionField">
+      <label>Connection</label>
+    </input>
+    
+  </fieldset>
+  <row>
+    <panel>
+      <input type="text" token="queryfield">
+      <label>SQL Query</label>
+    </input>
+      </panel>
+      </row>
+  <row>
+    <panel>
+  
+      <input type="text" token="searchField">
+        <label>Search</label>
+      </input>
+      <table>
+        <search>
+          <query>| remotedbq connection=lab_amc query="SELECT * FROM machines" index=remotedb</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>
